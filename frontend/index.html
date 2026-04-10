@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>YouTube Chat</title>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/static/favicon.png?v=2"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body
@@ -12,7 +18,7 @@
     <div class="flex flex-col md:flex-row h-screen">
       <!-- SIDEBAR -->
       <aside
-        class="w-full md:w-[360px] h-full bg-[#f7f7f3] border-b md:border-b-0 md:border-r border-[#ddd] flex flex-col"
+        class="w-full md:w-[360px] h-full bg-[#f7f7f3] border-r border-[#ddd] flex flex-col"
       >
         <!-- STICKY TOP -->
         <div
@@ -104,9 +110,26 @@
       </aside>
 
       <!-- CHAT AREA -->
-      <main class="flex-1 flex flex-col min-h-0">
+      <main
+        id="mobileChat"
+        class="hidden md:flex flex-1 flex-col min-h-0 fixed inset-0 z-40 bg-[#f5f5f1] md:static"
+      >
         <div
-          class="px-4 md:px-6 py-4 md:py-[22px] border-b border-[#ddd] flex justify-between items-center bg-[#fafaf7]"
+          class="md:hidden flex items-center justify-between px-4 py-4 border-b"
+        >
+          <div class="flex items-center gap-3 mb-5">
+            <div
+              class="w-9 h-9 rounded-xl bg-[#e45b57] flex items-center justify-center"
+            >
+              <div
+                class="w-0 h-0 border-l-[12px] border-l-white border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1"
+              ></div>
+            </div>
+            <h2 class="text-[22px] font-bold">YouTube Chat</h2>
+          </div>
+        </div>
+        <div
+          class="hidden md:flex px-4 md:px-6 py-4 md:py-[22px] border-b border-[#ddd] flex justify-between items-center bg-[#fafaf7]"
         >
           <div>
             <h2 class="text-[18px] md:text-[20px] font-bold text-[#6b7280]">
@@ -126,9 +149,10 @@
         <!-- MESSAGES -->
         <div
           id="messages"
-          class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-[18px] min-h-0"
+          class="overflow-y-auto p-4 md:p-6 flex flex-col gap-[18px]"
+          style="height: calc(100vh - 320px)"
         >
-          <div class="flex gap-3 items-start">
+          <!-- <div class="flex gap-3 items-start">
             <div
               class="w-[34px] h-[34px] rounded-full bg-[#f3dede] text-[#e45b57] flex items-center justify-center font-bold shrink-0"
             >
@@ -139,7 +163,7 @@
             >
               Paste a YouTube link to begin.
             </div>
-          </div>
+          </div> -->
         </div>
 
         <!-- SUGGESTIONS -->
@@ -183,6 +207,17 @@
           </button>
         </div>
       </main>
+      <div
+        class="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-[#ddd] bg-white/80 backdrop-blur-md px-4 py-3"
+      >
+        <button
+          id="mobileSwitchBtn"
+          onclick="toggleMobileScreen()"
+          class="w-full rounded-full bg-[#e45b57] text-white py-3 text-sm font-semibold shadow transition-all duration-300 hover:bg-[#d94d49] hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]"
+        >
+          💬 Open Chat
+        </button>
+      </div>
     </div>
 
     <script>
@@ -228,9 +263,18 @@
         const [minutes, seconds] = timestamp.split(":").map(Number);
         const totalSeconds = minutes * 60 + seconds;
 
+        // jump video
         videoFrame.src = `https://www.youtube.com/embed/${currentVideoId}?start=${totalSeconds}&autoplay=1`;
-      }
 
+        // on mobile → switch back to video screen
+        if (window.innerWidth < 768) {
+          const chat = document.getElementById("mobileChat");
+          const btn = document.getElementById("mobileSwitchBtn");
+
+          chat.classList.add("hidden");
+          if (btn) btn.innerHTML = "💬 Open Chat";
+        }
+      }
       function appendMessage(text, role) {
         const wrapper = document.createElement("div");
         const isUser = role === "user";
@@ -293,7 +337,7 @@
           transcriptBox.textContent =
             data.transcript || "Transcript unavailable.";
 
-          appendMessage("Video loaded successfully. Ask anything!", "bot");
+          appendMessage("Video loaded successfully.", "bot");
         } catch (err) {
           appendMessage("Failed to process video.", "bot");
           console.error(err);
@@ -304,6 +348,21 @@
 
       function toggleTranscript() {
         transcriptBox.classList.toggle("hidden");
+      }
+
+      function toggleMobileScreen() {
+        const chat = document.getElementById("mobileChat");
+        const btn = document.getElementById("mobileSwitchBtn");
+
+        const isHidden = chat.classList.contains("hidden");
+
+        if (isHidden) {
+          chat.classList.remove("hidden");
+          btn.innerHTML = "🎥 Watch Video";
+        } else {
+          chat.classList.add("hidden");
+          btn.innerHTML = "💬 Open Chat";
+        }
       }
 
       async function askQuestion() {

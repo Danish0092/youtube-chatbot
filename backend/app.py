@@ -78,12 +78,20 @@ def process_video():
             return jsonify({"error": "Invalid YouTube URL"}), 400
 
         # =============================
-        # Transcript (UNCHANGED)
+        # Transcript (UPDATED)
         # =============================
         api = YouTubeTranscriptApi()
         transcript_list = api.fetch(video_id)
 
-        transcript = " ".join(item.text for item in transcript_list)
+        def format_timestamp(seconds):
+            minutes = int(seconds // 60)
+            seconds = int(seconds % 60)
+            return f"{minutes:02}:{seconds:02}"
+
+        transcript = "\n".join(
+            f"[{format_timestamp(item.start)}] {item.text}"
+            for item in transcript_list
+        )
 
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=500,
@@ -104,7 +112,7 @@ def process_video():
         )
 
         # =============================
-        # Metadata (NEW)
+        # Metadata
         # =============================
         clean_url = f"https://www.youtube.com/watch?v={video_id}"
 
@@ -139,10 +147,10 @@ def process_video():
         )
 
         # =============================
-        # FINAL RESPONSE
+        # Final Response
         # =============================
         return jsonify({
-            "message": " Transcript loaded",
+            "message": "Transcript loaded",
             "title": title,
             "channel": channel,
             "duration": duration,
@@ -181,8 +189,9 @@ You are a helpful YouTube video assistant.
 
 Answer ONLY from transcript context.
 
-Whenever possible, include timestamps in mm:ss format
-based on transcript moments.
+Use ONLY timestamps explicitly available in transcript context.
+Never generate estimated timestamps.
+Always preserve original transcript timestamps.
 
 Example:
 The creator explains monetization at 4:32.
