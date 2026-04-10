@@ -15,7 +15,7 @@ Built with **Flask, LangChain, FAISS, OpenAI, Tailwind CSS, and JavaScript**.
 
 ## 🚀 Live Frontend Demo
 
-🔗 Add your Vercel frontend link here
+🔗 [https://youtube-chatbot-kappa.vercel.app/]
 
 ---
 
@@ -73,7 +73,9 @@ youtube-chatbot/
 │   └── app.py
 │
 ├── frontend/
-│   └── index.html
+│   ├── index.html
+│   └── static/
+│       └── favicon.png
 │
 ├── requirements.txt
 └── README.md
@@ -86,7 +88,7 @@ youtube-chatbot/
 Clone repo:
 
 ```bash
-git clone https://github.com/yourusername/youtube-chatbot.git
+git clone https://github.com/Danish0092/youtube-chatbot.git
 cd youtube-chatbot
 ```
 
@@ -136,10 +138,10 @@ http://127.0.0.1:5000
 
 ---
 
-
 ## 🔮 Future Improvements
 
 - 🔴 real backend token streaming
+- 🕘 persistent chat history
 - 📚 multi-video comparison mode
 - 🌙 dark mode
 - 📝 export notes as PDF
