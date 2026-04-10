@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YouTube Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body
+    class="m-0 p-0 box-border font-sans bg-[#f5f5f1] text-[#222] overflow-hidden"
+  >
+    <div class="flex flex-col md:flex-row h-screen">
+      <!-- SIDEBAR -->
+      <aside
+        class="w-full md:w-[360px] h-full bg-[#f7f7f3] border-b md:border-b-0 md:border-r border-[#ddd] flex flex-col"
+      >
+        <!-- STICKY TOP -->
+        <div
+          class="sticky top-0 z-10 bg-[#f7f7f3] p-4 md:p-5 border-b border-[#ddd]"
+        >
+          <div class="flex items-center gap-3 mb-5">
+            <div
+              class="w-9 h-9 rounded-xl bg-[#e45b57] flex items-center justify-center"
+            >
+              <div
+                class="w-0 h-0 border-l-[12px] border-l-white border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1"
+              ></div>
+            </div>
+            <h2 class="text-[22px] font-bold">YouTube Chat</h2>
+          </div>
+
+          <label class="block text-[13px] text-[#555] mb-2">VIDEO URL</label>
+
+          <input
+            id="videoUrl"
+            placeholder="https://youtube.com/watch?v="
+            class="w-full p-[14px] rounded-[12px] border border-[#d2d2cc] bg-white outline-none"
+          />
+
+          <button
+            id="loadBtn"
+            class="w-full mt-[10px] p-[13px] rounded-[12px] border border-[#d2d2cc] bg-white font-semibold text-[16px] transition-all duration-200 hover:bg-[#e45b57] hover:text-white"
+          >
+            Load video
+          </button>
+        </div>
+
+        <!-- SCROLLABLE LOWER CONTENT -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-5 space-y-5">
+          <!-- video card -->
+          <div class="bg-white border border-[#e1e1db] rounded-[18px] p-4">
+            <div
+              id="videoFrameWrap"
+              class="h-[200px] md:h-[180px] rounded-[14px] bg-[#efefe9] flex items-center justify-center mb-4 overflow-hidden relative"
+            >
+              <!-- VIDEO -->
+              <iframe
+                id="videoFrame"
+                class="w-full h-full border-0 rounded-[14px] hidden absolute inset-0"
+                allowfullscreen
+              ></iframe>
+
+              <!-- PLACEHOLDER -->
+              <div
+                id="videoPlaceholder"
+                class="w-full h-full flex items-center justify-center absolute inset-0"
+              >
+                <div
+                  class="w-11 h-6 rounded-md bg-[#e45b57] flex items-center justify-center"
+                >
+                  <div
+                    class="w-0 h-0 border-l-[8px] border-l-white border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent ml-1"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <h3 id="videoTitle" class="text-[16px] mb-[6px] font-semibold">
+              Watch here
+            </h3>
+            <p id="videoMeta" class="text-[14px] text-[#666]"></p>
+          </div>
+
+          <!-- transcript -->
+          <div class="bg-white border border-[#e1e1db] rounded-[18px] p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-[15px] font-semibold">Full Transcript</h3>
+              <button
+                onclick="toggleTranscript()"
+                class="text-[13px] text-[#e45b57] font-medium"
+              >
+                Show / Hide
+              </button>
+            </div>
+
+            <div
+              id="transcriptBox"
+              class="max-h-[220px] overflow-y-auto rounded-[12px] bg-[#f8f8f5] p-3 text-[14px] leading-[1.7] text-[#444] hidden"
+            >
+              Transcript will appear here...
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CHAT AREA -->
+      <main class="flex-1 flex flex-col min-h-0">
+        <div
+          class="px-4 md:px-6 py-4 md:py-[22px] border-b border-[#ddd] flex justify-between items-center bg-[#fafaf7]"
+        >
+          <div>
+            <h2 class="text-[18px] md:text-[20px] font-bold text-[#6b7280]">
+              Ask about Youtube videos
+            </h2>
+            <p class="text-[13px] text-[#9ca3af] mt-0.5">
+              Answers grounded in transcript only
+            </p>
+          </div>
+          <span
+            class="inline-flex h-[42px] min-w-[100px] items-center justify-center rounded-full bg-[#e45b57] text-[14px] font-semibold text-white"
+          >
+            gpt-4.1
+          </span>
+        </div>
+
+        <!-- MESSAGES -->
+        <div
+          id="messages"
+          class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-[18px] min-h-0"
+        >
+          <div class="flex gap-3 items-start">
+            <div
+              class="w-[34px] h-[34px] rounded-full bg-[#f3dede] text-[#e45b57] flex items-center justify-center font-bold shrink-0"
+            >
+              Y
+            </div>
+            <div
+              class="max-w-[85%] md:max-w-[62%] bg-[#efefe9] px-[18px] py-4 rounded-[18px] text-[16px] leading-[1.6]"
+            >
+              Paste a YouTube link to begin.
+            </div>
+          </div>
+        </div>
+
+        <!-- SUGGESTIONS -->
+        <div
+          class="px-4 md:px-6 pb-4 flex gap-[10px] flex-wrap overflow-x-auto"
+        >
+          <button
+            onclick="
+              sendSuggestion('Can you summarize this video in simple words?')
+            "
+            class="border border-[#d0d0ca] bg-white rounded-[14px] px-[14px] py-[10px] whitespace-nowrap"
+          >
+            Summarize this video
+          </button>
+
+          <button
+            onclick="
+              sendSuggestion('What are the key takeaways from this video?')
+            "
+            class="border border-[#d0d0ca] bg-white rounded-[14px] px-[14px] py-[10px] whitespace-nowrap"
+          >
+            Key takeaways
+          </button>
+        </div>
+
+        <!-- INPUT -->
+        <div
+          class="border-t border-[#ddd] px-4 md:px-6 py-3 md:py-[18px] flex gap-3 items-center bg-[#fafaf7] sticky bottom-0"
+        >
+          <textarea
+            id="msgInput"
+            rows="1"
+            placeholder="Ask a question about the video..."
+            class="flex-1 resize-none overflow-y-auto min-h-[56px] max-h-[180px] rounded-[28px] border border-[#d0d0ca] px-[18px] py-4 text-[15px] leading-[1.5] outline-none"
+          ></textarea>
+          <button
+            id="sendBtn"
+            class="w-[52px] h-[52px] rounded-full bg-[#e45b57] text-white text-[20px] shrink-0"
+          >
+            ➤
+          </button>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const messages = document.getElementById("messages");
+      const input = document.getElementById("msgInput");
+      const videoUrl = document.getElementById("videoUrl");
+      const loadBtn = document.getElementById("loadBtn");
+      const sendBtn = document.getElementById("sendBtn");
+      const videoFrame = document.getElementById("videoFrame");
+      const videoTitle = document.getElementById("videoTitle");
+      const videoMeta = document.getElementById("videoMeta");
+      const transcriptBox = document.getElementById("transcriptBox");
+      const videoPlaceholder = document.getElementById("videoPlaceholder");
+      let currentVideoId = null;
+
+      loadBtn.addEventListener("click", processVideo);
+      sendBtn.addEventListener("click", askQuestion);
+
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          askQuestion();
+        }
+      });
+
+      input.addEventListener("input", autoResizeTextarea);
+
+      function autoResizeTextarea() {
+        input.style.height = "auto";
+        input.style.height = Math.min(input.scrollHeight, 180) + "px";
+      }
+      function makeTimestampsClickable(text) {
+        return text.replace(
+          /\b(\d{1,2}:\d{2})\b/g,
+          (match) =>
+            `<button onclick="seekToTimestamp('${match}')" class="font-semibold text-[#e45b57] hover:underline">${match}</button>`,
+        );
+      }
+
+      function seekToTimestamp(timestamp) {
+        if (!currentVideoId) return;
+
+        const [minutes, seconds] = timestamp.split(":").map(Number);
+        const totalSeconds = minutes * 60 + seconds;
+
+        videoFrame.src = `https://www.youtube.com/embed/${currentVideoId}?start=${totalSeconds}&autoplay=1`;
+      }
+
+      function appendMessage(text, role) {
+        const wrapper = document.createElement("div");
+        const isUser = role === "user";
+
+        wrapper.className = `flex gap-3 items-start ${isUser ? "justify-end" : ""}`;
+
+        wrapper.innerHTML = `
+          ${!isUser ? `<div class="w-[34px] h-[34px] rounded-full bg-[#f3dede] text-[#e45b57] flex items-center justify-center font-bold shrink-0">Y</div>` : ""}
+
+          <div class="${isUser ? "bg-[#e45b57] text-white" : "bg-[#efefe9] text-[#333]"} max-w-[85%] md:max-w-[62%] px-[18px] py-4 rounded-[18px] text-[16px] leading-[1.6]">
+            ${makeTimestampsClickable(text)}
+          </div>
+
+          ${isUser ? `<div class="w-[34px] h-[34px] rounded-full bg-[#f3dede] text-[#e45b57] flex items-center justify-center font-bold shrink-0">U</div>` : ""}
+        `;
+
+        messages.appendChild(wrapper);
+        messages.scrollTop = messages.scrollHeight;
+      }
+
+      async function processVideo() {
+        const url = videoUrl.value.trim();
+        if (!url) {
+          appendMessage("Please paste a YouTube URL first.", "bot");
+          return;
+        }
+
+        loadBtn.textContent = "Loading...";
+
+        try {
+          const res = await fetch("/process", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+
+          const data = await res.json();
+
+          if (data.error) {
+            appendMessage(data.error, "bot");
+            loadBtn.textContent = "Load video";
+            return;
+          }
+
+          const match = url.match(
+            /(?:v=|youtu\.be\/|embed\/)([0-9A-Za-z_-]{11})/,
+          );
+          const videoId = match ? match[1] : null;
+          currentVideoId = videoId;
+
+          if (videoId) {
+            videoFrame.src = `https://www.youtube.com/embed/${videoId}`;
+            videoFrame.classList.remove("hidden");
+            videoPlaceholder.classList.add("hidden");
+          }
+
+          videoTitle.textContent = data.title || "Loaded YouTube Video";
+          videoMeta.textContent = `${data.channel || "Unknown Channel"} · ${data.duration || ""}`;
+
+          transcriptBox.textContent =
+            data.transcript || "Transcript unavailable.";
+
+          appendMessage("Video loaded successfully. Ask anything!", "bot");
+        } catch (err) {
+          appendMessage("Failed to process video.", "bot");
+          console.error(err);
+        }
+
+        loadBtn.textContent = "Load video";
+      }
+
+      function toggleTranscript() {
+        transcriptBox.classList.toggle("hidden");
+      }
+
+      async function askQuestion() {
+        const question = input.value.trim();
+        if (!question) return;
+
+        appendMessage(question, "user");
+        input.value = "";
+
+        const typing = document.createElement("div");
+        typing.className = "flex gap-3 items-start";
+        typing.id = "typing-temp";
+
+        typing.innerHTML = `
+          <div class="w-[34px] h-[34px] rounded-full bg-[#f3dede] text-[#e45b57] flex items-center justify-center font-bold shrink-0">Y</div>
+          <div class="max-w-[85%] md:max-w-[62%] bg-[#efefe9] px-[18px] py-4 rounded-[18px] text-[16px] leading-[1.6]">Typing...</div>
+        `;
+
+        messages.appendChild(typing);
+        messages.scrollTop = messages.scrollHeight;
+
+        try {
+          const res = await fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question }),
+          });
+
+          const data = await res.json();
+          typing.remove();
+          await streamBotMessage(data.answer || data.error);
+        } catch (err) {
+          typing.remove();
+          appendMessage("Something went wrong while asking.", "bot");
+        }
+      }
+
+      async function streamBotMessage(text) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "flex gap-3 items-start";
+
+        const bubble = document.createElement("div");
+        bubble.className =
+          "max-w-[85%] md:max-w-[62%] bg-[#efefe9] text-[#333] px-[18px] py-4 rounded-[18px] text-[16px] leading-[1.6]";
+
+        wrapper.innerHTML = `
+    <div class="w-[34px] h-[34px] rounded-full bg-[#f3dede] text-[#e45b57] flex items-center justify-center font-bold shrink-0">
+      Y
+    </div>
+  `;
+
+        wrapper.appendChild(bubble);
+        messages.appendChild(wrapper);
+
+        const words = text.split(" ");
+        let currentText = "";
+
+        for (let i = 0; i < words.length; i++) {
+          currentText += words[i] + " ";
+          bubble.innerHTML = makeTimestampsClickable(currentText);
+          messages.scrollTop = messages.scrollHeight;
+
+          await new Promise((resolve) => setTimeout(resolve, 35));
+        }
+      }
+
+      function sendSuggestion(text) {
+        input.value = text;
+        askQuestion();
+      }
+    </script>
+  </body>
+</html>
